@@ -66,7 +66,7 @@ jobs:
       - name: Trigger workflow do repo orquestrador
         uses: peter-evans/workflow-dispatch@v1
         with:
-          repository: Oberdann/vortex-commerce
+          repository: Oberdann/Vortex-Commerce
           workflow: deploy.yml
           ref: main
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
