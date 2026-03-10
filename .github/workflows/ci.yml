@@ -58,3 +58,15 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+  trigger-orchestrator:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Trigger workflow do repo orquestrador
+        uses: peter-evans/workflow-dispatch@v1
+        with:
+          repository: Oberdann/vortex-commerce
+          workflow: deploy.yml
+          ref: main
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
