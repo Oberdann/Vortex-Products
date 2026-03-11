@@ -64,9 +64,9 @@ jobs:
     needs: build
     steps:
       - name: Trigger workflow do repo orquestrador
-        uses: peter-evans/workflow-dispatch@v3
+        uses: benc-uk/workflow-dispatch@v1
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          repository: Oberdann/Vortex-Commerce
+          repo: Oberdann/Vortex-Commerce
           workflow: deploy.yml
           ref: main
