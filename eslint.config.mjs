@@ -36,6 +36,9 @@ export default tseslint.config(
         'error',
         {
           endOfLine: 'auto',
+          tabWidth: 2,
+          useTabs: false,
+          printWidth: 80
         },
       ],
     },
