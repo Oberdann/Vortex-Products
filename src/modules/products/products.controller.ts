@@ -27,7 +27,7 @@ export class ProductsController {
     const response = await this.productService.getAll();
 
     const message =
-      response.products.length !== 0
+      response.products.length <= 0
         ? 'Nenhum produto encontrado.'
         : 'Produtos encontrados com sucesso.';
 
