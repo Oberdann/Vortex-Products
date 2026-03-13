@@ -97,12 +97,12 @@ jobs:
           tags: |
             oberdanandrade/vortex-products:${{ github.sha }}
             oberdanandrade/vortex-products:latest
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
 
   trigger-orchestrator:
+    name: Trigger Orchestrator Workflow
     runs-on: ubuntu-latest
     needs: docker-build-and-push
-
     steps:
       - name: Trigger workflow do repo orquestrador
         uses: benc-uk/workflow-dispatch@v1
