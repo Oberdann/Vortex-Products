@@ -82,13 +82,13 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build Docker image
         run: |
-          IMAGE_NAME=myuser/vortex-api-gateway
+          IMAGE_NAME=oberdanandrade/vortex-api-gateway
           IMAGE_TAG=${{ github.sha }}
           docker build -t $IMAGE_NAME:$IMAGE_TAG .
           docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
       - name: Push Docker image
         run: |
-          IMAGE_NAME=myuser/vortex-api-gateway
+          IMAGE_NAME=oberdanandrade/vortex-api-gateway
           IMAGE_TAG=${{ github.sha }}
           docker push $IMAGE_NAME:$IMAGE_TAG
           docker push $IMAGE_NAME:latest
