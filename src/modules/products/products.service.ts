@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IProductsService } from './contracts/products-service-use-case';
+import { IProductsService } from './contracts/i-products-service';
 import { ProductsLisResponseDto } from './dtos/output/product-list-response-dto';
 import { ProductResponseDto } from './dtos/output/product-response-dto';
 import { PrismaService } from 'src/database/prisma.service';
@@ -17,19 +17,17 @@ export class ProductsService implements IProductsService {
       include: { categories: true },
     });
 
-    return ProductMapper.toListResponseDto(products);
+    const response = ProductMapper.toListResponseDto(products);
+
+    return response;
   }
 
   async getById(id: string): Promise<ProductResponseDto> {
-    const product = await this.prisma.product.findUnique({ where: { id } });
+    const product = await this.findProductOrFail(id);
 
-    if (!product) {
-      throw new ProductNotFoundException(
-        `O produto com ID ${id} não foi encontrado.`,
-      );
-    }
+    const response = ProductMapper.toResponseDto(product);
 
-    return ProductMapper.toResponseDto(product);
+    return response;
   }
 
   async create(product: CreateProductDto): Promise<ProductResponseDto> {
@@ -39,54 +37,60 @@ export class ProductsService implements IProductsService {
       price: product.price,
       stock: product.stock ?? 1,
       isActive: product.isActive ?? true,
+      categories: {
+        connect: product.categoryIds?.map((id) => ({ id })) ?? [],
+      },
     };
 
     const createdProduct = await this.prisma.product.create({
       data: productEntity,
     });
 
-    return ProductMapper.toResponseDto(createdProduct);
+    const response = ProductMapper.toResponseDto(createdProduct);
+
+    return response;
   }
 
   async update(
     id: string,
     product: UpdateProductDto,
   ): Promise<ProductResponseDto> {
-    const existingProduct = await this.prisma.product.findUnique({
-      where: { id },
-    });
+    const existingProduct = await this.findProductOrFail(id);
 
-    if (!existingProduct) {
-      throw new ProductNotFoundException(
-        `O produto com ID ${id} não foi encontrado.`,
-      );
-    }
-
-    const productEntity = {
-      name: product.name ?? existingProduct.name,
-      description: product.description ?? existingProduct.description,
-      price: product.price ?? existingProduct.price,
-      stock: product.stock ?? existingProduct.stock,
-      isActive: product.isActive ?? existingProduct.isActive,
-    };
+    const productEntity = ProductMapper.toPrismaUpdate(
+      product,
+      existingProduct,
+    );
 
     const updatedProduct = await this.prisma.product.update({
       where: { id },
       data: productEntity,
+      include: { categories: true },
     });
 
-    return ProductMapper.toResponseDto(updatedProduct);
+    const response = ProductMapper.toResponseDto(updatedProduct);
+
+    return response;
   }
 
   async delete(id: string): Promise<void> {
-    const product = await this.prisma.product.findUnique({ where: { id } });
+    await this.findProductOrFail(id);
+
+    await this.prisma.product.delete({ where: { id } });
+  }
+
+  private async findProductOrFail(id: string, includeCategories = false) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: includeCategories ? { categories: true } : undefined,
+    });
 
     if (!product) {
       throw new ProductNotFoundException(
-        `Produto com id ${id} não encontrado.`,
+        `Produto com ID ${id} não encontrado.`,
       );
     }
 
-    await this.prisma.product.delete({ where: { id } });
+    return product;
   }
 }

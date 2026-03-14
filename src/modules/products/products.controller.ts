@@ -9,7 +9,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { IProductsService } from './contracts/products-service-use-case';
+import { IProductsService } from './contracts/i-products-service';
 import { Ok } from 'src/common/utils/response-util';
 import { CreateProductDto } from './dtos/input/create-product-dto';
 import { UpdateProductDto } from './dtos/input/update-product-dto';
