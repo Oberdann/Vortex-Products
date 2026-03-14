@@ -14,7 +14,16 @@ export class CategoriesService implements ICategoriesService {
 
   async getAll(): Promise<CategoriesLisResponseDto> {
     const categories = await this.prisma.category.findMany({
-      include: { products: true },
+      select: {
+        id: true,
+        name: true,
+        isActive: true,
+        products: {
+          select: { id: true, name: true },
+        },
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     const response = CategoryMapper.toListResponseDto(categories);
