@@ -1,7 +1,7 @@
 import { PrismaService } from 'src/database/prisma.service';
 import { ICategoriesService } from './contracts/i-categories-service';
 import { CreateCategoryDto } from './dtos/input/create-category-dto';
-import { UpdateCategoryDto } from './dtos/input/update-product-dto';
+import { UpdateCategoryDto } from './dtos/input/update-category-dto';
 import { CategoriesLisResponseDto } from './dtos/output/category-list-response-dto';
 import { CategoryResponseDto } from './dtos/output/category-response-dto';
 import { Injectable } from '@nestjs/common';

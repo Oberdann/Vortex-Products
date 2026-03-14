@@ -1,7 +1,7 @@
 import { Prisma, Category } from 'generated/prisma/client';
 import { CategoryResponseDto } from '../dtos/output/category-response-dto';
 import { CreateCategoryDto } from '../dtos/input/create-category-dto';
-import { UpdateCategoryDto } from '../dtos/input/update-product-dto';
+import { UpdateCategoryDto } from '../dtos/input/update-category-dto';
 
 export class CategoryMapper {
   static toResponseDto(

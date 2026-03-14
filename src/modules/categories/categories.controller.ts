@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ICategoriesService } from './contracts/i-categories-service';
 import { Ok } from 'src/common/utils/response-util';
-import { UpdateCategoryDto } from './dtos/input/update-product-dto';
+import { UpdateCategoryDto } from './dtos/input/update-category-dto';
 import { CreateCategoryDto } from './dtos/input/create-category-dto';
 
 @Controller('categories')
