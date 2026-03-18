@@ -31,6 +31,7 @@ export class CreateProductDto {
     description: 'Preço do produto em reais',
   })
   @IsNumber({}, { message: 'O campo [price] precisa ser um número.' })
+  @IsNotEmpty({ message: 'O campo [price] não pode estar vazio.' })
   price: number;
 
   @ApiPropertyOptional({
@@ -51,9 +52,9 @@ export class CreateProductDto {
     example: 50,
     description: 'Quantidade de itens disponíveis em estoque',
   })
-  @IsOptional()
   @IsNumber({}, { message: 'O campo [stock] precisa ser um número.' })
-  stock?: number;
+  @IsNotEmpty({ message: 'O campo [stock] não pode estar vazio.' })
+  stock: number;
 
   @ApiPropertyOptional({
     example: true,

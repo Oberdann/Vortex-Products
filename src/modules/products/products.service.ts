@@ -7,6 +7,9 @@ import { CreateProductDto } from './dtos/input/create-product-dto';
 import { UpdateProductDto } from './dtos/input/update-product-dto';
 import { ProductMapper } from './mapper/products.mapper';
 import { ProductNotFoundException } from './exceptions/product-not-found-exception';
+import { ProductNameAlreadyExistsException } from './exceptions/product-name-already-exists-exception';
+import { InvalidProductPriceException } from './exceptions/invalid-product-price-exception';
+import { InvalidProductStockException } from './exceptions/invalid-product-stock-exception';
 
 @Injectable()
 export class ProductsService implements IProductsService {
@@ -31,6 +34,30 @@ export class ProductsService implements IProductsService {
   }
 
   async create(product: CreateProductDto): Promise<ProductResponseDto> {
+    const productWithSameName = await this.prisma.product.findFirst({
+      where: {
+        name: product.name,
+      },
+    });
+
+    if (productWithSameName) {
+      throw new ProductNameAlreadyExistsException(
+        'Ja existe um produto com esse nome.',
+      );
+    }
+
+    if (product.price < 0) {
+      throw new InvalidProductPriceException(
+        'O preço do produto deve ser maior que zero.',
+      );
+    }
+
+    if (product.stock < 0) {
+      throw new InvalidProductStockException(
+        'O estoque do produto não pode ser negativo.',
+      );
+    }
+
     const productEntity = {
       name: product.name,
       description: product.description ?? '',
@@ -56,6 +83,33 @@ export class ProductsService implements IProductsService {
     product: UpdateProductDto,
   ): Promise<ProductResponseDto> {
     const existingProduct = await this.findProductOrFail(id);
+
+    if (product.name) {
+      const productWithSameName = await this.prisma.product.findFirst({
+        where: {
+          name: product.name,
+          NOT: { id },
+        },
+      });
+
+      if (productWithSameName) {
+        throw new ProductNameAlreadyExistsException(
+          'Ja existe um produto com esse nome.',
+        );
+      }
+    }
+
+    if (product.price !== undefined && product.price < 0) {
+      throw new InvalidProductPriceException(
+        'O preço do produto deve ser maior que zero.',
+      );
+    }
+
+    if (product.stock !== undefined && product.stock < 0) {
+      throw new InvalidProductStockException(
+        'O estoque do produto não pode ser negativo.',
+      );
+    }
 
     const productEntity = ProductMapper.toPrismaUpdate(
       product,
