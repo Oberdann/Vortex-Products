@@ -13,6 +13,8 @@ import { IProductsService } from './contracts/i-products-service';
 import { Ok } from 'src/common/utils/response-util';
 import { CreateProductDto } from './dtos/input/create-product-dto';
 import { UpdateProductDto } from './dtos/input/update-product-dto';
+import { AddCategoriesToProductDto } from './dtos/input/add-categories-to-product';
+import { RemoveCategoriesFromProductDto } from './dtos/input/remove-categories-from-product';
 
 @Controller('products')
 export class ProductsController {
@@ -39,7 +41,7 @@ export class ProductsController {
   async getById(@Param('id') id: string) {
     const response = await this.productService.getById(id);
 
-    return Ok('Produto encontrado com sucesso', response);
+    return Ok('Produto encontrado com sucesso.', response);
   }
 
   @HttpCode(201)
@@ -47,7 +49,7 @@ export class ProductsController {
   async create(@Body() product: CreateProductDto) {
     const response = await this.productService.create(product);
 
-    return Ok('Produto criado com sucesso', response);
+    return Ok('Produto criado com sucesso.', response);
   }
 
   @HttpCode(200)
@@ -55,7 +57,35 @@ export class ProductsController {
   async update(@Param('id') id: string, @Body() product: UpdateProductDto) {
     const response = await this.productService.update(id, product);
 
-    return Ok('Produto atualizado com sucesso', response);
+    return Ok('Produto atualizado com sucesso.', response);
+  }
+
+  @HttpCode(200)
+  @Put(':id/categories/add')
+  async addCategoriesToProduct(
+    @Param('id') id: string,
+    @Body() categoriesId: AddCategoriesToProductDto,
+  ) {
+    const response = await this.productService.addCategoriesToProduct(
+      id,
+      categoriesId.categoryIds,
+    );
+
+    return Ok('Categorias adicionadas com sucesso.', response);
+  }
+
+  @HttpCode(200)
+  @Put(':id/categories/remove')
+  async removeCategoriesFromProduct(
+    @Param('id') id: string,
+    @Body() categoriesId: RemoveCategoriesFromProductDto,
+  ) {
+    const response = await this.productService.removeCategoriesFromProduct(
+      id,
+      categoriesId.categoryIds,
+    );
+
+    return Ok('Categorias removiadas com sucesso.', response);
   }
 
   @HttpCode(204)
@@ -63,6 +93,6 @@ export class ProductsController {
   async delete(@Param('id') id: string) {
     await this.productService.delete(id);
 
-    return Ok('Produto deletado com sucesso');
+    return Ok('Produto deletado com sucesso.');
   }
 }

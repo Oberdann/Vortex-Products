@@ -8,5 +8,13 @@ export interface IProductsService {
   getById(id: string): Promise<ProductResponseDto>;
   create(product: CreateProductDto): Promise<ProductResponseDto>;
   update(id: string, product: UpdateProductDto): Promise<ProductResponseDto>;
+  addCategoriesToProduct(
+    id: string,
+    categoriesId: string[],
+  ): Promise<ProductResponseDto>;
+  removeCategoriesFromProduct(
+    id: string,
+    categoriesId: string[],
+  ): Promise<ProductResponseDto>;
   delete(id: string): Promise<void>;
 }

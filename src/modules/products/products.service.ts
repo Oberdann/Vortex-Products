@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { IProductsService } from './contracts/i-products-service';
 import { ProductsLisResponseDto } from './dtos/output/product-list-response-dto';
 import { ProductResponseDto } from './dtos/output/product-response-dto';
@@ -10,10 +10,16 @@ import { ProductNotFoundException } from './exceptions/product-not-found-excepti
 import { ProductNameAlreadyExistsException } from './exceptions/product-name-already-exists-exception';
 import { InvalidProductPriceException } from './exceptions/invalid-product-price-exception';
 import { InvalidProductStockException } from './exceptions/invalid-product-stock-exception';
+import { ICategoriesService } from '../categories/contracts/i-categories-service';
 
 @Injectable()
 export class ProductsService implements IProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+
+    @Inject('ICategoriesService')
+    private readonly categoriesService: ICategoriesService,
+  ) {}
 
   async getAll(): Promise<ProductsLisResponseDto> {
     const products = await this.prisma.product.findMany({
@@ -114,6 +120,60 @@ export class ProductsService implements IProductsService {
     });
 
     const response = ProductMapper.toResponseDto(updatedProduct);
+
+    return response;
+  }
+
+  async addCategoriesToProduct(
+    id: string,
+    categoriesId: string[],
+  ): Promise<ProductResponseDto> {
+    await this.findProductOrFail(id);
+
+    await Promise.all(
+      categoriesId.map((categoryId) =>
+        this.categoriesService.getById(categoryId),
+      ),
+    );
+
+    const productUpdate = await this.prisma.product.update({
+      where: { id },
+      data: {
+        categories: {
+          connect: categoriesId.map((categoryId) => ({ id: categoryId })),
+        },
+      },
+      include: { categories: true },
+    });
+
+    const response = ProductMapper.toResponseDto(productUpdate);
+
+    return response;
+  }
+
+  async removeCategoriesFromProduct(
+    id: string,
+    categoriesId: string[],
+  ): Promise<ProductResponseDto> {
+    await this.findProductOrFail(id);
+
+    await Promise.all(
+      categoriesId.map((categoryId) =>
+        this.categoriesService.getById(categoryId),
+      ),
+    );
+
+    const productUpdate = await this.prisma.product.update({
+      where: { id },
+      data: {
+        categories: {
+          disconnect: categoriesId.map((categoryId) => ({ id: categoryId })),
+        },
+      },
+      include: { categories: true },
+    });
+
+    const response = ProductMapper.toResponseDto(productUpdate);
 
     return response;
   }

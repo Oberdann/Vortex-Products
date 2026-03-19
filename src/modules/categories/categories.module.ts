@@ -12,5 +12,6 @@ import { CategoriesController } from './categories.controller';
       useClass: CategoriesService,
     },
   ],
+  exports: ['ICategoriesService'],
 })
 export class CategoryModule {}

@@ -37,7 +37,7 @@ export class CategoriesController {
   @HttpCode(200)
   @Get(':id')
   async getById(@Param('id') id: string) {
-    const response = await this.categoryService.getBy(id);
+    const response = await this.categoryService.getById(id);
 
     return Ok('Categoria encontrada com sucesso.', response);
   }
