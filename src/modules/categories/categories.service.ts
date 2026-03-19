@@ -5,8 +5,9 @@ import { UpdateCategoryDto } from './dtos/input/update-category-dto';
 import { CategoriesLisResponseDto } from './dtos/output/category-list-response-dto';
 import { CategoryResponseDto } from './dtos/output/category-response-dto';
 import { Injectable } from '@nestjs/common';
-import { CategoryNotFoundException } from './exceptions/categorie-not-found-exception';
+import { CategoryNotFoundException } from './exceptions/category-not-found-exception';
 import { CategoryMapper } from './mapper/categories.mapper';
+import { CategoryNameAlreadyExistsException } from './exceptions/category-name-already-exists-exception';
 
 @Injectable()
 export class CategoriesService implements ICategoriesService {
@@ -31,7 +32,7 @@ export class CategoriesService implements ICategoriesService {
     return response;
   }
 
-  async getBy(id: string): Promise<CategoryResponseDto> {
+  async getById(id: string): Promise<CategoryResponseDto> {
     const category = await this.findCategoryOrFail(id);
 
     const response = CategoryMapper.toResponseDto(category);
@@ -48,6 +49,18 @@ export class CategoriesService implements ICategoriesService {
   }
 
   async create(category: CreateCategoryDto): Promise<CategoryResponseDto> {
+    const categorytWithSameName = await this.prisma.category.findFirst({
+      where: {
+        name: category.name,
+      },
+    });
+
+    if (categorytWithSameName) {
+      throw new CategoryNameAlreadyExistsException(
+        'Ja existe uma categoria com esse nome.',
+      );
+    }
+
     const createdCategory = await this.prisma.category.create({
       data: category,
     });
@@ -62,6 +75,21 @@ export class CategoriesService implements ICategoriesService {
     updateDto: UpdateCategoryDto,
   ): Promise<CategoryResponseDto> {
     const existingCategory = await this.findCategoryOrFail(id);
+
+    if (updateDto.name) {
+      const categorytWithSameName = await this.prisma.category.findFirst({
+        where: {
+          name: updateDto.name,
+          NOT: { id },
+        },
+      });
+
+      if (categorytWithSameName) {
+        throw new CategoryNameAlreadyExistsException(
+          'Ja existe uma categoria com esse nome.',
+        );
+      }
+    }
 
     const updateData = CategoryMapper.toPrismaUpdate(
       updateDto,
@@ -89,7 +117,15 @@ export class CategoriesService implements ICategoriesService {
   private async findCategoryOrFail(id: string, includeProducts = false) {
     const category = await this.prisma.category.findUnique({
       where: { id },
-      include: includeProducts ? { products: true } : undefined,
+      include: includeProducts
+        ? {
+            products: {
+              where: {
+                isActive: true,
+              },
+            },
+          }
+        : undefined,
     });
 
     if (!category) {

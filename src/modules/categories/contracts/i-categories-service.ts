@@ -5,7 +5,7 @@ import { CategoryResponseDto } from '../dtos/output/category-response-dto';
 
 export interface ICategoriesService {
   getAll(): Promise<CategoriesLisResponseDto>;
-  getBy(id: string): Promise<CategoryResponseDto>;
+  getById(id: string): Promise<CategoryResponseDto>;
   getProductsByCategory(id: string): Promise<CategoryResponseDto>;
   create(category: CreateCategoryDto): Promise<CategoryResponseDto>;
   update(id: string, category: UpdateCategoryDto): Promise<CategoryResponseDto>;

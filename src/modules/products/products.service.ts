@@ -58,16 +58,7 @@ export class ProductsService implements IProductsService {
       );
     }
 
-    const productEntity = {
-      name: product.name,
-      description: product.description ?? '',
-      price: product.price,
-      stock: product.stock ?? 1,
-      isActive: product.isActive ?? true,
-      categories: {
-        connect: product.categoryIds?.map((id) => ({ id })) ?? [],
-      },
-    };
+    const productEntity = ProductMapper.toPrismaCreate(product);
 
     const createdProduct = await this.prisma.product.create({
       data: productEntity,
