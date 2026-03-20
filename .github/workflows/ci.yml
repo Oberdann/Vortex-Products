@@ -97,7 +97,7 @@ jobs:
           tags: |
             oberdanandrade/vortex-products:${{ github.sha }}
             oberdanandrade/vortex-products:latest
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
 
   trigger-orchestrator:
     name: Trigger Orchestrator Workflow
