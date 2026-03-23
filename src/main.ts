@@ -1,11 +1,13 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+import './observability/instrumentation';
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as dotenv from 'dotenv';
 import { ValidationPipe } from '@nestjs/common';
-import { ExceptionGlobalFilter } from './common/filters/exception-global-filter';
-
-dotenv.config();
+import { MetricsInterceptor } from './common/interceptors/metrics-interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,7 +22,7 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalFilters(new ExceptionGlobalFilter());
+  app.useGlobalInterceptors(new MetricsInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle('Vortex API - Products')
