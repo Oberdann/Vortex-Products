@@ -11,6 +11,7 @@ import { ProductMapper } from 'src/modules/products/mapper/products.mapper';
 import { CreateProductDto } from 'src/modules/products/dtos/input/create-product-dto';
 import { UpdateProductDto } from 'src/modules/products/dtos/input/update-product-dto';
 import { PrismaService } from 'src/database/prisma.service';
+import { PinoLogger } from 'nestjs-pino';
 
 jest.mock('src/modules/products/mapper/products.mapper');
 
@@ -54,6 +55,12 @@ describe('ProductsService', () => {
       },
     };
 
+    const loggerMock = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
     const categoriesServiceMock: jest.Mocked<ICategoriesService> = {
       getAll: jest.fn(),
       getById: jest.fn(),
@@ -68,6 +75,7 @@ describe('ProductsService', () => {
         ProductsService,
         { provide: PrismaService, useValue: prismaMock },
         { provide: 'ICategoriesService', useValue: categoriesServiceMock },
+        { provide: PinoLogger, useValue: loggerMock },
       ],
     }).compile();
 
