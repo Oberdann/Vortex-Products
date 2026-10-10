@@ -23,6 +23,12 @@
 
 ## Description
 
+Ao criar um produto, o serviço grava o produto e um evento `product.created` na Outbox na mesma transação. Um publicador em segundo plano envia os eventos confirmados para o exchange durável `vortex.events` no RabbitMQ e marca a Outbox após confirmação do broker.
+
+Configure `PRODUCTS_DB_URL` e `RABBITMQ_URL` no ambiente. Para executar o serviço fora do Docker com o RabbitMQ publicado na máquina local, use `amqp://guest:guest@localhost:5672`.
+
+O Products mantém o campo de estoque legado no banco durante a migração, mas não o aceita mais na API nem o inclui nas respostas.
+
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
 ## Project setup

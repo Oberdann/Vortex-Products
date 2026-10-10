@@ -13,7 +13,6 @@ export class ProductMapper {
       name: product.name,
       description: product.description,
       price: Number(product.price),
-      stock: product.stock,
       isActive: product.isActive,
       categories: product.categories?.map((cat) => ({ name: cat.name })) ?? [],
       createdAt: product.createdAt,
@@ -32,7 +31,8 @@ export class ProductMapper {
       name: createDto.name,
       description: createDto.description ?? '',
       price: createDto.price,
-      stock: createDto.stock ?? 1,
+      // Legacy database column retained until existing quantities are migrated to Stock.
+      stock: 0,
       isActive: createDto.isActive ?? true,
       categories: {
         connect: createDto.categoryIds?.map((id) => ({ id })) ?? [],
@@ -48,7 +48,6 @@ export class ProductMapper {
       name: updateDto.name ?? existingProduct.name,
       description: updateDto.description ?? existingProduct.description,
       price: updateDto.price ?? existingProduct.price,
-      stock: updateDto.stock ?? existingProduct.stock,
       isActive: updateDto.isActive ?? existingProduct.isActive,
     };
 

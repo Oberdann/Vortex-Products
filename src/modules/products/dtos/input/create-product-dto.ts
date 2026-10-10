@@ -4,9 +4,11 @@ import {
   IsNotEmpty,
   IsOptional,
   IsNumber,
+  Min,
   IsArray,
   ArrayNotEmpty,
   IsBoolean,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -31,30 +33,25 @@ export class CreateProductDto {
     description: 'Preço do produto em reais',
   })
   @IsNumber({}, { message: 'O campo [price] precisa ser um número.' })
-  @IsNotEmpty({ message: 'O campo [price] não pode estar vazio.' })
+  @Min(0.01, { message: 'O preço deve ser de pelo menos 0,01.' })
   price: number;
 
   @ApiPropertyOptional({
-    example: ['calcado', 'esporte'],
+    example: [
+      'b7e2f3a1-9876-4c2d-9f0a-abcdef123456',
+      'c1d2e3f4-1234-4abc-9def-987654321000',
+    ],
     description: 'IDs das categorias associadas',
     type: [String],
   })
   @IsOptional()
   @IsArray({ message: 'O campo [categoryIds] precisa ser um array.' })
   @ArrayNotEmpty({ message: 'O campo [categoryIds] não pode estar vazio.' })
-  @IsString({
+  @IsUUID('4', {
     each: true,
-    message: 'Todos os itens de [categoryIds] devem ser strings.',
+    message: 'Cada ID de categoria deve ser um UUID válido.',
   })
   categoryIds?: string[];
-
-  @ApiPropertyOptional({
-    example: 50,
-    description: 'Quantidade de itens disponíveis em estoque',
-  })
-  @IsNumber({}, { message: 'O campo [stock] precisa ser um número.' })
-  @IsNotEmpty({ message: 'O campo [stock] não pode estar vazio.' })
-  stock: number;
 
   @ApiPropertyOptional({
     example: true,

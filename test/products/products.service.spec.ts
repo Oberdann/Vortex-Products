@@ -5,7 +5,6 @@ import { ProductsService } from 'src/modules/products/products.service';
 import { ProductNotFoundException } from 'src/modules/products/exceptions/product-not-found-exception';
 import { ProductNameAlreadyExistsException } from 'src/modules/products/exceptions/product-name-already-exists-exception';
 import { InvalidProductPriceException } from 'src/modules/products/exceptions/invalid-product-price-exception';
-import { InvalidProductStockException } from 'src/modules/products/exceptions/invalid-product-stock-exception';
 
 import { ProductMapper } from 'src/modules/products/mapper/products.mapper';
 import { CreateProductDto } from 'src/modules/products/dtos/input/create-product-dto';
@@ -36,7 +35,6 @@ describe('ProductsService', () => {
     name: 'Product 1',
     description: 'desc',
     price: 100,
-    stock: 10,
     isActive: true,
     categories: [],
     createdAt: new Date(),
@@ -136,7 +134,6 @@ describe('ProductsService', () => {
         name: 'Product 1',
         description: 'desc',
         price: 100,
-        stock: 10,
         isActive: true,
       };
 
@@ -153,7 +150,6 @@ describe('ProductsService', () => {
         service.create({
           name: 'Product 1',
           price: 10,
-          stock: 1,
         } as CreateProductDto),
       ).rejects.toThrow(ProductNameAlreadyExistsException);
     });
@@ -165,22 +161,10 @@ describe('ProductsService', () => {
         service.create({
           name: 'Product 1',
           price: -1,
-          stock: 1,
         } as CreateProductDto),
       ).rejects.toThrow(InvalidProductPriceException);
     });
 
-    it('should throw if stock is negative', async () => {
-      prisma.product.findFirst.mockResolvedValue(null);
-
-      await expect(
-        service.create({
-          name: 'Product 1',
-          price: 10,
-          stock: -1,
-        } as CreateProductDto),
-      ).rejects.toThrow(InvalidProductStockException);
-    });
   });
 
   describe('update', () => {
@@ -224,13 +208,6 @@ describe('ProductsService', () => {
       );
     });
 
-    it('should throw if stock is negative', async () => {
-      prisma.product.findUnique.mockResolvedValue(mockProduct);
-
-      await expect(service.update('1', { stock: -1 })).rejects.toThrow(
-        InvalidProductStockException,
-      );
-    });
   });
 
   describe('addCategoriesToProduct', () => {

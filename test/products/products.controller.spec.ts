@@ -13,7 +13,6 @@ describe('ProductsController', () => {
     name: 'Product 1',
     description: 'desc',
     price: 100,
-    stock: 10,
     isActive: true,
     categories: [{ name: 'Cat 1' }],
     createdAt: new Date(),
@@ -99,7 +98,6 @@ describe('ProductsController', () => {
         name: 'Product 1',
         description: 'desc',
         price: 100,
-        stock: 10,
         isActive: true,
       };
 

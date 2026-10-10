@@ -9,7 +9,6 @@ import { ProductMapper } from './mapper/products.mapper';
 import { ProductNotFoundException } from './exceptions/product-not-found-exception';
 import { ProductNameAlreadyExistsException } from './exceptions/product-name-already-exists-exception';
 import { InvalidProductPriceException } from './exceptions/invalid-product-price-exception';
-import { InvalidProductStockException } from './exceptions/invalid-product-stock-exception';
 import { ICategoriesService } from '../categories/contracts/i-categories-service';
 import { PinoLogger } from 'nestjs-pino';
 
@@ -35,7 +34,7 @@ export class ProductsService implements IProductsService {
   }
 
   async getById(id: string): Promise<ProductResponseDto> {
-    const product = await this.findProductOrFail(id);
+    const product = await this.findProductOrFail(id, true);
 
     const response = ProductMapper.toResponseDto(product);
 
@@ -62,7 +61,7 @@ export class ProductsService implements IProductsService {
       );
     }
 
-    if (product.price < 0) {
+    if (product.price < 0.01) {
       this.logger.warn(
         { name: product.price },
         'Tentativa de criar produto com preço inválido.',
@@ -73,19 +72,28 @@ export class ProductsService implements IProductsService {
       );
     }
 
-    if (product.stock < 0) {
-      this.logger.warn({ stock: product.stock }, 'Estoque inválido informado.');
-
-      throw new InvalidProductStockException(
-        'O estoque do produto não pode ser negativo.',
-      );
-    }
+    await this.validateCategoriesExist(product.categoryIds);
 
     const productEntity = ProductMapper.toPrismaCreate(product);
 
-    const createdProduct = await this.prisma.product.create({
-      data: productEntity,
-    });
+    const createdProduct = await this.prisma.$transaction(
+      async (transaction) => {
+        const created = await transaction.product.create({
+          data: productEntity,
+          include: { categories: true },
+        });
+
+        await transaction.outboxEvent.create({
+          data: {
+            aggregateId: created.id,
+            eventType: 'product.created',
+            payload: { productId: created.id },
+          },
+        });
+
+        return created;
+      },
+    );
 
     this.logger.info(
       { productId: createdProduct.id },
@@ -125,7 +133,7 @@ export class ProductsService implements IProductsService {
       }
     }
 
-    if (product.price !== undefined && product.price < 0) {
+    if (product.price !== undefined && product.price < 0.01) {
       this.logger.warn(
         { name: product.name },
         'Tentativa de atualizar produto com preço inválido.',
@@ -136,16 +144,7 @@ export class ProductsService implements IProductsService {
       );
     }
 
-    if (product.stock !== undefined && product.stock < 0) {
-      this.logger.warn(
-        { stock: product.stock },
-        'Estoque inválido informado ao atulizar produto.',
-      );
-
-      throw new InvalidProductStockException(
-        'O estoque do produto não pode ser negativo.',
-      );
-    }
+    await this.validateCategoriesExist(product.categoryIds);
 
     const productEntity = ProductMapper.toPrismaUpdate(
       product,
@@ -255,5 +254,17 @@ export class ProductsService implements IProductsService {
     }
 
     return product;
+  }
+
+  private async validateCategoriesExist(categoryIds?: string[]) {
+    if (!categoryIds?.length) {
+      return;
+    }
+
+    await Promise.all(
+      categoryIds.map((categoryId) =>
+        this.categoriesService.getById(categoryId),
+      ),
+    );
   }
 }
