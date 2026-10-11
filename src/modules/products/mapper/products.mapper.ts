@@ -31,8 +31,6 @@ export class ProductMapper {
       name: createDto.name,
       description: createDto.description ?? '',
       price: createDto.price,
-      // Legacy database column retained until existing quantities are migrated to Stock.
-      stock: 0,
       isActive: createDto.isActive ?? true,
       categories: {
         connect: createDto.categoryIds?.map((id) => ({ id })) ?? [],

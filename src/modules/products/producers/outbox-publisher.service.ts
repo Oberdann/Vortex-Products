@@ -5,10 +5,17 @@ import { PinoLogger } from 'nestjs-pino';
 import { PrismaService } from 'src/database/prisma.service';
 import {
   PRODUCT_CREATED_EVENT,
+  PRODUCT_DELETED_EVENT,
   RABBITMQ_EVENTS_EXCHANGE,
+  RETRY_DELAY_MS,
   STOCK_PRODUCT_CREATED_DLX,
   STOCK_PRODUCT_CREATED_FAILED_ROUTE,
   STOCK_PRODUCT_CREATED_QUEUE,
+  STOCK_PRODUCT_CREATED_RETRY_QUEUE,
+  STOCK_PRODUCT_DELETED_DLQ,
+  STOCK_PRODUCT_DELETED_FAILED_ROUTE,
+  STOCK_PRODUCT_DELETED_QUEUE,
+  STOCK_PRODUCT_DELETED_RETRY_QUEUE,
 } from 'src/common/messaging/rabbitmq-topology';
 
 const POLL_INTERVAL_MS = 3000;
@@ -58,7 +65,7 @@ export class OutboxPublisherService implements OnModuleInit, OnModuleDestroy {
       connection = await amqp.connect(process.env.RABBITMQ_URL);
 
       channel = await connection.createConfirmChannel();
-    
+
       await this.declareTopology(channel);
 
       const events = await this.prisma.outboxEvent.findMany({
@@ -104,10 +111,50 @@ export class OutboxPublisherService implements OnModuleInit, OnModuleDestroy {
       },
     });
 
+    await channel.assertQueue(STOCK_PRODUCT_CREATED_RETRY_QUEUE, {
+      durable: true,
+      arguments: {
+        'x-message-ttl': RETRY_DELAY_MS,
+        'x-dead-letter-exchange': RABBITMQ_EVENTS_EXCHANGE,
+        'x-dead-letter-routing-key': PRODUCT_CREATED_EVENT,
+      },
+    });
+
+    await channel.assertQueue(STOCK_PRODUCT_DELETED_QUEUE, {
+      durable: true,
+      arguments: {
+        'x-dead-letter-exchange': STOCK_PRODUCT_CREATED_DLX,
+        'x-dead-letter-routing-key': STOCK_PRODUCT_DELETED_FAILED_ROUTE,
+      },
+    });
+
+    await channel.assertQueue(STOCK_PRODUCT_DELETED_RETRY_QUEUE, {
+      durable: true,
+      arguments: {
+        'x-message-ttl': RETRY_DELAY_MS,
+        'x-dead-letter-exchange': RABBITMQ_EVENTS_EXCHANGE,
+        'x-dead-letter-routing-key': PRODUCT_DELETED_EVENT,
+      },
+    });
+
+    await channel.assertQueue(STOCK_PRODUCT_DELETED_DLQ, { durable: true });
+
     await channel.bindQueue(
       STOCK_PRODUCT_CREATED_QUEUE,
       RABBITMQ_EVENTS_EXCHANGE,
       PRODUCT_CREATED_EVENT,
+    );
+
+    await channel.bindQueue(
+      STOCK_PRODUCT_DELETED_QUEUE,
+      RABBITMQ_EVENTS_EXCHANGE,
+      PRODUCT_DELETED_EVENT,
+    );
+
+    await channel.bindQueue(
+      STOCK_PRODUCT_DELETED_DLQ,
+      STOCK_PRODUCT_CREATED_DLX,
+      STOCK_PRODUCT_DELETED_FAILED_ROUTE,
     );
   }
 

@@ -11,6 +11,7 @@ import { ProductNameAlreadyExistsException } from './exceptions/product-name-alr
 import { InvalidProductPriceException } from './exceptions/invalid-product-price-exception';
 import { ICategoriesService } from '../categories/contracts/i-categories-service';
 import { PinoLogger } from 'nestjs-pino';
+import { PRODUCT_DELETED_EVENT } from 'src/common/messaging/rabbitmq-topology';
 
 @Injectable()
 export class ProductsService implements IProductsService {
@@ -232,11 +233,19 @@ export class ProductsService implements IProductsService {
   async delete(id: string): Promise<void> {
     await this.findProductOrFail(id);
 
-    this.logger.info({ productId: id }, 'Categorias removidas.');
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.product.delete({ where: { id } });
 
-    await this.prisma.product.delete({ where: { id } });
+      await transaction.outboxEvent.create({
+        data: {
+          aggregateId: id,
+          eventType: PRODUCT_DELETED_EVENT,
+          payload: { productId: id },
+        },
+      });
+    });
 
-    this.logger.info({ productId: id }, 'Deletando produto');
+    this.logger.info({ productId: id }, 'Produto deletado com sucesso.');
   }
 
   private async findProductOrFail(id: string, includeCategories = false) {
