@@ -11,7 +11,10 @@ import { ProductNameAlreadyExistsException } from './exceptions/product-name-alr
 import { InvalidProductPriceException } from './exceptions/invalid-product-price-exception';
 import { ICategoriesService } from '../categories/contracts/i-categories-service';
 import { PinoLogger } from 'nestjs-pino';
-import { PRODUCT_DELETED_EVENT } from 'src/common/messaging/rabbitmq-topology';
+import {
+  PRODUCT_CREATED_EVENT,
+  PRODUCT_DELETED_EVENT,
+} from 'src/common/messaging/rabbitmq-topology';
 
 @Injectable()
 export class ProductsService implements IProductsService {
@@ -87,7 +90,7 @@ export class ProductsService implements IProductsService {
         await transaction.outboxEvent.create({
           data: {
             aggregateId: created.id,
-            eventType: 'product.created',
+            eventType: PRODUCT_CREATED_EVENT,
             payload: { productId: created.id },
           },
         });
